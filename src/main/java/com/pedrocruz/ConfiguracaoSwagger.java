@@ -1,5 +1,6 @@
-package com.pedrocruz.controller;
+package com.pedrocruz;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -14,6 +15,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class ConfiguracaoSwagger {
 
+	@Bean
 	public Docket api() {
 		return new Docket(DocumentationType.SWAGGER_2).select()
 				.apis(RequestHandlerSelectors.basePackage("com.pedrocruz.controller")).paths(PathSelectors.any())
@@ -21,7 +23,7 @@ public class ConfiguracaoSwagger {
 	}
 
 	private ApiInfo apiInfo() {
-		return new ApiInfoBuilder().title("Swagger")
+		return new ApiInfoBuilder().title("Carrinho Compras API")
 				.description("Documentação Swagger pra acesso aos endpoints do carrinho de compras").version("0.0.1")
 				.build();
 	}
