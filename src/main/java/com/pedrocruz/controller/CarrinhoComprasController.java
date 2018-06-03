@@ -34,7 +34,8 @@ public class CarrinhoComprasController {
 	private CarrinhoComprasService service;
 
 	@ApiOperation(value = "Metodo de listar todos os carrinhos disponiveis")
-	@ApiResponse(code = 200, message = "Retorna os carrinhos criado")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retorna os carrinhos criado"),
+			@ApiResponse(code = 204, message = "Caso não exista nenhum carrinho criado") })
 	@RequestMapping(path = "/listarcarrinhos", method = RequestMethod.GET)
 	public ResponseEntity<Object> listarCarrinhos() {
 		Response<Object> response = new Response<Object>();
@@ -43,14 +44,13 @@ public class CarrinhoComprasController {
 			response.setResponse(carrinhos.get());
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
-			response.setResponse("Não existem carrinhos criados");
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
 		}
 	}
 
 	@ApiOperation(value = "Metodo que lista os produtos de um determinado carrinho por cpf")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retorna o carrinho por cpf"),
-			@ApiResponse(code = 204, message = "Caso o body tenha algum erro") })
+			@ApiResponse(code = 204, message = "Caso não exista carrinho para o cpf") })
 	@RequestMapping(path = "/listarcarrinho/{cpf}", method = RequestMethod.GET)
 	public ResponseEntity<Object> listarCarrinhoPorCPF(@PathVariable("cpf") String cpf) {
 		Response<Object> response = new Response<Object>();
@@ -59,7 +59,6 @@ public class CarrinhoComprasController {
 			response.setResponse(carrinho.get());
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
-			response.setResponse("Não existe carrinho para este CPF: " + cpf);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
 		}
 	}
@@ -85,7 +84,7 @@ public class CarrinhoComprasController {
 	@ApiOperation(value = "Metodo de limpa o carrinho por cpf")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Retorna uma mensagem invalidando ou nao um carrinho criado"),
-			@ApiResponse(code = 204, message = "Caso nao encontra nenhum carrinho para o cpf"),
+			@ApiResponse(code = 204, message = "Caso nao encontre nenhum carrinho para o cpf"),
 			@ApiResponse(code = 400, message = "Caso o body tenha algum erro") })
 	@RequestMapping(path = "/limparcarrinho", method = RequestMethod.DELETE)
 	public ResponseEntity<Object> limparCarrinhoPorCPF(@Valid @RequestBody UsuarioDTO usuario, BindingResult result) {
@@ -100,7 +99,6 @@ public class CarrinhoComprasController {
 			response.setResponse("Carrinho excluido para CPF: " + usuario.getCpf());
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
-			response.setResponse("Não exste carrinho para este CPF: " + usuario.getCpf());
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
 		}
 	}
