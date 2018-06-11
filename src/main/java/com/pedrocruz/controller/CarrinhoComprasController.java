@@ -1,5 +1,6 @@
 package com.pedrocruz.controller;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pedrocruz.domain.CarrinhoCompras;
+import com.pedrocruz.domain.ItemDTO;
+import com.pedrocruz.domain.Produto;
+import com.pedrocruz.domain.ProdutoDTO;
 import com.pedrocruz.domain.Response;
 import com.pedrocruz.domain.UsuarioDTO;
 import com.pedrocruz.service.CarrinhoComprasService;
@@ -103,38 +107,74 @@ public class CarrinhoComprasController {
 		}
 	}
 
-	// TODO - Implementar metodo
 	@ApiOperation(value = "Metodo que retorna o valor medio das compras de todos os carrinhos")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retorna o valor medio dos carrinhos") })
 	@RequestMapping(path = "/ticketmedio", method = RequestMethod.GET)
 	public ResponseEntity<Object> ticketMedioPorCarrinho() {
-		return new ResponseEntity<Object>("TicketMedio por Carrinho", HttpStatus.OK);
+		Response<BigDecimal> response = new Response<BigDecimal>();
+		response.setResponse(service.getValorTicketMedio());
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	// TODO - Implementar metodo
 	@ApiOperation(value = "Metodo que remove um produto baseado na posição no carrinho")
-	@RequestMapping(path = "/removeritem/{posicao}", method = RequestMethod.DELETE)
-	public ResponseEntity<Object> removerItemPosicao() {
-		return new ResponseEntity<Object>("Adicionando item no carrinho", HttpStatus.OK);
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Retorna uma mensagem dizendo se excluiu ou não o item") })
+	@RequestMapping(path = "/removeritem/{cpf}/{posicao}", method = RequestMethod.DELETE)
+	public ResponseEntity<Object> removerItemPosicao(@PathVariable("cpf") String cpf,
+			@PathVariable("posicao") int posicao) {
+		Response<String> response = new Response<String>();
+		if (service.removerItem(cpf, posicao)) {
+			response.setResponse("Item excluido com sucesso");
+		} else {
+			response.setResponse("Não foi encontrado item para a exclusão");
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	// TODO - Implementar metodo
 	@ApiOperation(value = "Metodo que remove um produto")
-	@RequestMapping(path = "/removeritem", method = RequestMethod.DELETE)
-	public ResponseEntity<Object> removerItem() {
-		return new ResponseEntity<Object>("Adicionando item no carrinho", HttpStatus.OK);
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retorna uma mensagem dizendo se excluiu ou não o item"),
+			@ApiResponse(code = 400, message = "Algum campo nao foi validado corretamente") })
+	@RequestMapping(path = "/removeritem/{cpf}", method = RequestMethod.DELETE)
+	public ResponseEntity<Object> removerItem(@PathVariable("cpf") String cpf, @RequestBody ProdutoDTO produtoDTO,
+			BindingResult result) {
+		Response<String> response = new Response<String>();
+
+		if (result.hasErrors()) {
+			result.getAllErrors().forEach(error -> response.setResponse(error.getDefaultMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+
+		Produto produto = new Produto(produtoDTO.getCodigo(), produtoDTO.getDescricao());
+		if (service.removerItem(cpf, produto)) {
+			response.setResponse("Item excluido com sucesso");
+		} else {
+			response.setResponse("Não foi encontrado item para a exclusão");
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	// TODO - Implementar metodo
-	@ApiOperation(value = "Metodo que retorna o valor total do carrinho")
-	@RequestMapping(path = "/valorTotal/{cpf}", method = RequestMethod.GET)
-	public ResponseEntity<Object> valorTotalPorCarrinho() {
-		return new ResponseEntity<Object>("Adicionando item no carrinho", HttpStatus.OK);
-	}
+	@ApiOperation(value = "Metodo que adiciona um item ao carrinho")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Retorna o carrinho preenchido com o novo item"),
+			@ApiResponse(code = 400, message = "Algum campo não foi validado corretamente") })
+	@RequestMapping(path = "/adicionarItem/{cpf}", method = RequestMethod.POST)
+	public ResponseEntity<Object> adicionarItem(@PathVariable("cpf") String cpf, @RequestBody ItemDTO itemDTO,
+			BindingResult result) {
+		Response<Object> response = new Response<Object>();
+		Produto produto = new Produto(itemDTO.getProduto().getCodigo(), itemDTO.getProduto().getDescricao());
 
-	// TODO - Implementar metodo
-	@ApiOperation(value = "Metodo que adiciona um produto ao carrinho")
-	@RequestMapping(path = "/adicionarItem", method = RequestMethod.POST)
-	public ResponseEntity<Object> adicionarItem() {
-		return new ResponseEntity<Object>("Adicionando item no carrinho", HttpStatus.OK);
+		if (result.hasErrors()) {
+			result.getAllErrors().forEach(error -> response.setResponse(error.getDefaultMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+
+		service.adicionarItem(cpf, produto, itemDTO.getValorUnitario(), itemDTO.getQuantidade());
+		Optional<CarrinhoCompras> carrinho = service.buscarCarrinho(cpf);
+		if (carrinho.isPresent()) {
+			response.setResponse(carrinho.get());
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 }

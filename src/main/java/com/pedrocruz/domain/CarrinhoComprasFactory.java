@@ -1,6 +1,7 @@
 package com.pedrocruz.domain;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,9 @@ public class CarrinhoComprasFactory {
 	 * @return BigDecimal
 	 */
 	public BigDecimal getValorTicketMedio() {
-		return null;
+		Double media = this.carrinhos.values().stream().mapToDouble(compra -> compra.getValorTotal().doubleValue())
+				.average().orElse(0.0);
+		return new BigDecimal(media).setScale(2, RoundingMode.HALF_UP);
 	}
 
 	/**
